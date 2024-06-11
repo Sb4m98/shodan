@@ -1,0 +1,3 @@
+shodan
+azure-identity
+azure-keyvault-secrets
