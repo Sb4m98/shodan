@@ -16,6 +16,7 @@ TO_EMAIL_SECRET = os.getenv('TO_EMAIL_SECRET')
 
 # Recupera i segreti dal Key Vault
 key_vault_url = f"https://{KEY_VAULT_NAME}.vault.azure.net/"
+print(key_vault_url)
 credential = DefaultAzureCredential()
 client = SecretClient(vault_url=key_vault_url, credential=credential)
 API_KEY = client.get_secret(SECRET_NAME).value
