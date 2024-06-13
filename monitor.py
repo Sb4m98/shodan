@@ -5,34 +5,20 @@ import shodan
 import smtplib
 from email.mime.text import MIMEText
 
-# Configurazione Key Vault
-KEY_VAULT_NAME = os.getenv('KEY_VAULT_NAME')
-SECRET_NAME = os.getenv('SECRET_NAME')
-SMTP_SERVER_SECRET = os.getenv('SMTP_SERVER_SECRET')
-SMTP_PORT_SECRET = os.getenv('SMTP_PORT_SECRET')
-SMTP_USER_SECRET = os.getenv('SMTP_USER_SECRET')
-SMTP_PASS_SECRET = os.getenv('SMTP_PASS_SECRET')
-TO_EMAIL_SECRET = os.getenv('TO_EMAIL_SECRET')
-
-# Recupera i segreti dal Key Vault
-key_vault_url = f"https://{KEY_VAULT_NAME}.vault.azure.net/"
-print(key_vault_url)
-credential = DefaultAzureCredential()
-client = SecretClient(vault_url=key_vault_url, credential=credential)
-API_KEY = client.get_secret(SECRET_NAME).value
+# Recupera i segreti dalle variabili d'ambiente
+API_KEY = os.getenv('SHODAN_API_KEY')
 print(API_KEY)
-SMTP_SERVER = client.get_secret(SMTP_SERVER_SECRET).value
-print(SMTP_SERVER)
-SMTP_PORT = int(client.get_secret(SMTP_PORT_SECRET).value)
+SMTP_PORT = int(os.getenv('SMTP_PORT_SECRET'))
 print(SMTP_PORT)
-SMTP_USER = client.get_secret(SMTP_USER_SECRET).value
+SMTP_USER = os.getenv('SMTP_USER_SECRET')
 print(SMTP_USER)
-SMTP_PASS = client.get_secret(SMTP_PASS_SECRET).value
+SMTP_PASS = os.getenv('SMTP_PASS_SECRET')
 print(SMTP_PASS)
-TO_EMAIL = client.get_secret(TO_EMAIL_SECRET).value
+TO_EMAIL = os.getenv('TO_EMAIL_SECRET')
 print(TO_EMAIL)
+SMTP_SERVER = os.getenv('SMTP_SERVER_SECRET')
+print(SMTP_SERVER)
 
-# Configurazione Shodan e SMTP
 api = shodan.Shodan(API_KEY)
 
 def invia_notifica(oggetto, corpo):
@@ -78,5 +64,5 @@ def monitoraggio(query):
         invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
 
 # Esegui il monitoraggio per una query specifica
-query = 'country:"IT" city:"Roma" vuln:heartbleed'  # Modifica la query in base alla tua interpretazione di "near your target"
+query = 'country:"IT" city:"Roma" vuln:heartbleed'
 monitoraggio(query)
