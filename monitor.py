@@ -19,11 +19,17 @@ key_vault_url = f"https://{KEY_VAULT_NAME}.vault.azure.net/"
 credential = DefaultAzureCredential()
 client = SecretClient(vault_url=key_vault_url, credential=credential)
 API_KEY = client.get_secret(SECRET_NAME).value
+print(API_KEY)
 SMTP_SERVER = client.get_secret(SMTP_SERVER_SECRET).value
+print(SMTP_SERVER)
 SMTP_PORT = int(client.get_secret(SMTP_PORT_SECRET).value)
+print(SMTP_PORT)
 SMTP_USER = client.get_secret(SMTP_USER_SECRET).value
+print(SMTP_USER)
 SMTP_PASS = client.get_secret(SMTP_PASS_SECRET).value
+print(SMTP_PASS)
 TO_EMAIL = client.get_secret(TO_EMAIL_SECRET).value
+print(TO_EMAIL)
 
 # Configurazione Shodan e SMTP
 api = shodan.Shodan(API_KEY)
