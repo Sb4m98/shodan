@@ -64,5 +64,5 @@ def monitoraggio(query):
         invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
 
 # Esegui il monitoraggio per una query specifica
-query = 'country:"IT" city:"Roma" vuln:heartbleed'
+query = 'country:"IT" city:"Roma" product:"webcam"'
 monitoraggio(query)
