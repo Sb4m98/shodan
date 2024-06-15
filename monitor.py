@@ -27,10 +27,14 @@ def invia_notifica(oggetto, corpo):
     msg['From'] = SMTP_USER
     msg['To'] = TO_EMAIL
 
-    with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(msg['From'], [msg['To']], msg.as_string())
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(msg['From'], [msg['To']], msg.as_string())
+        print("Email inviata con successo.")
+    except smtplib.SMTPException as e:
+        print(f"Errore nell'invio dell'email: {e}")
 
 def ricerca_dispositivi_vulnerabili(query):
     try:
@@ -38,7 +42,7 @@ def ricerca_dispositivi_vulnerabili(query):
         print(f"Risultati trovati: {results['total']}")
         return results['matches']
     except shodan.APIError as e:
-        print(f"Errore: {e}")
+        print(f"Errore durante la ricerca su Shodan: {e}")
         return []
 
 def analizza_vulnerabilita(dispositivi):
