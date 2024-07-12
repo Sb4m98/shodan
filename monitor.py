@@ -3,8 +3,9 @@ from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 import shodan
 import smtplib
+import azure.cosmos.cosmos_client as cosmos_client
 from email.mime.text import MIMEText
-from pymongo import MongoClient
+
 
 # Recupera i segreti dalle variabili d'ambiente
 API_KEY = os.getenv('SHODAN_API_KEY')
