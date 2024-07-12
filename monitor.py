@@ -25,6 +25,9 @@ DB_NAME = os.getenv('DB_NAME')
 print(DB_NAME)
 COLLECTION_NAME = os.getenv('COLLECTION_NAME')
 print(COLLECTION_NAME)
+PRIMARY_KEY_DB = os.getenv('PRIMARY_KEY_DB')
+print(PRIMARY_KEY_DB)
+
 api = shodan.Shodan(API_KEY)
 
 def invia_notifica(oggetto, corpo):
@@ -41,14 +44,25 @@ def invia_notifica(oggetto, corpo):
         print("Email inviata con successo.")
     except smtplib.SMTPException as e:
         print(f"Errore nell'invio dell'email: {e}")
+        
 # Funzione per salvare i dati nel database
-def salva_dati(dispositivo):
+def collegamento_db(dispositivo):
+    client = cosmos_client.CosmosClient(DB_URI, {'masterKey' : PRIMARY_KEY_DB})
     try:
-        collection.insert_one(dispositivo)
-        print(f"Dati salvati per il dispositivo: {dispositivo['ip']}")
+        database = client.get_database_client(DATABASE_ID)
+        container = database.get_container_client(CONTAINER_ID)
+        print(f"Connessione creata col in DB")
+        salva_documento(container, dispositivo)
+        
     except Exception as e:
-        print(f"Errore nel salvataggio dei dati: {e}")
+        print(f"Errore nel tentativo di connessione: {e}")
 
+def salva_documento(container, dispositivo):
+    try:
+        container.create_item(body=dispositivo)
+        print(f"Documento creato: {dispositivo}")
+    except Exception as e:
+        print(f"Errore nel salvataggio del dispositivo: {e}")
 
 def ricerca_dispositivi_vulnerabili(query):
     try:
@@ -80,7 +94,7 @@ def monitoraggio(query):
     for dispositivo in vulnerabili:
         corpo_notifica = f"IP: {dispositivo['ip']}\nPorta: {dispositivo['port']}\nVulnerabilità: {dispositivo['vulnerabilita']}\nDati: {dispositivo['dati']}"
         invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
-        salva_dati(dispositivo)
+        collegamento_db(dispositivo)
 
 # Esegui il monitoraggio per una query specifica
 query = 'country:"IT" city:"Roma" product:"webcam"'
