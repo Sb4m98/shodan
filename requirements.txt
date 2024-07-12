@@ -1,4 +1,4 @@
 shodan
 azure-identity
 azure-keyvault-secrets
-pymongo
+azure-cosmos
