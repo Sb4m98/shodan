@@ -50,8 +50,8 @@ def invia_notifica(oggetto, corpo):
 def collegamento_db(dispositivo):
     client = cosmos_client.CosmosClient(DB_URI, {'masterKey' : PRIMARY_KEY_DB})
     try:
-        database = client.get_database_client(DATABASE_ID)
-        container = database.get_container_client(CONTAINER_ID)
+        database = client.get_database_client(DB_NAME)
+        container = database.get_container_client(COLLECTION_NAME)
         print(f"Connessione creata col in DB")
         salva_documento(container, dispositivo)
         
