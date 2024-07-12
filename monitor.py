@@ -4,6 +4,7 @@ from azure.keyvault.secrets import SecretClient
 import shodan
 import smtplib
 import azure.cosmos.cosmos_client as cosmos_client
+import uuid
 from email.mime.text import MIMEText
 
 
@@ -53,15 +54,15 @@ def collegamento_db(dispositivo):
         database = client.get_database_client(DB_NAME)
         container = database.get_container_client(COLLECTION_NAME)
         print(f"Connessione creata col in DB")
-        salva_documento(container, dispositivo)
+        salva_dispositivo(container, dispositivo)
         
     except Exception as e:
         print(f"Errore nel tentativo di connessione: {e}")
 
-def salva_documento(container, dispositivo):
+def salva_dispositivo(container, dispositivo):
     try:
         container.create_item(body=dispositivo)
-        print(f"Documento creato: {dispositivo}")
+        print(f"Dispositivo salvato correttamente: {dispositivo}")
     except Exception as e:
         print(f"Errore nel salvataggio del dispositivo: {e}")
 
@@ -82,6 +83,7 @@ def analizza_vulnerabilita(dispositivi):
         data = dispositivo['data']
         if 'vulns' in dispositivo:
             vulnerabili.append({
+                'id': str(uuid.uuid4()), #genera un id unico
                 'ip': ip,
                 'port': port,
                 'vulnerabilita': dispositivo['vulns'],
