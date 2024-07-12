@@ -98,5 +98,5 @@ def monitoraggio(query):
         collegamento_db(dispositivo)
 
 # Esegui il monitoraggio per una query specifica
-query = 'country:"IT" city:"Roma" product:"webcam"'
+query = 'country:"IT" city:"Castelnuovo della Daunia"'
 monitoraggio(query)
