@@ -7,7 +7,6 @@ import azure.cosmos.cosmos_client as cosmos_client
 import uuid
 from email.mime.text import MIMEText
 
-
 # Recupera i segreti dalle variabili d'ambiente
 API_KEY = os.getenv('SHODAN_API_KEY')
 print(API_KEY)
@@ -46,16 +45,16 @@ def invia_notifica(oggetto, corpo):
         print("Email inviata con successo.")
     except smtplib.SMTPException as e:
         print(f"Errore nell'invio dell'email: {e}")
-        
+
 # Funzione per salvare i dati nel database
-def collegamento_db(dispositivo):
+def collegamento_db(dispositivi_normalizzati):
     client = cosmos_client.CosmosClient(DB_URI, {'masterKey' : PRIMARY_KEY_DB})
     try:
         database = client.get_database_client(DB_NAME)
         container = database.get_container_client(COLLECTION_NAME)
         print(f"Connessione creata col in DB")
-        salva_dispositivo(container, dispositivo)
-        
+        for dispositivo in dispositivi_normalizzati:
+            salva_dispositivo(container, dispositivo)
     except Exception as e:
         print(f"Errore nel tentativo di connessione: {e}")
 
@@ -75,29 +74,44 @@ def ricerca_dispositivi_vulnerabili(query):
         print(f"Errore durante la ricerca su Shodan: {e}")
         return []
 
-def analizza_vulnerabilita(dispositivi):
-    vulnerabili = []
+def normalizza_vulnerabilita(dispositivi):
+    dispositivi_normalizzati = []
     for dispositivo in dispositivi:
         ip = dispositivo['ip_str']
         port = dispositivo['port']
-        data = dispositivo['data']
         if 'vulns' in dispositivo:
-            vulnerabili.append({
-                'id': str(uuid.uuid4()), #genera un id unico
-                'ip': ip,
-                'port': port,
-                'vulnerabilita': dispositivo['vulns'],
-                'dati': data
-            })
-    return vulnerabili
+            for cve, details in dispositivo['vulns'].items():
+                dispositivi_normalizzati.append({
+                    'id': str(uuid.uuid4()), #genera un id unico
+                    'ip': ip,
+                    'port': port,
+                    'CVE': cve,
+                    'verified': details.get('verified', False),
+                    'ranking_epss': details.get('ranking_epss', 0),
+                    'cvss_v2': details.get('cvss_v2', 0),
+                    'summary': details.get('summary', ''),
+                    'references': ', '.join(details.get('references', [])),
+                    'epss': details.get('epss', 0),
+                    'cvss': details.get('cvss', 0)
+                })
+    return dispositivi_normalizzati
 
 def monitoraggio(query):
     dispositivi = ricerca_dispositivi_vulnerabili(query)
-    vulnerabili = analizza_vulnerabilita(dispositivi)
-    for dispositivo in vulnerabili:
-        corpo_notifica = f"IP: {dispositivo['ip']}\nPorta: {dispositivo['port']}\nVulnerabilità: {dispositivo['vulnerabilita']}\nDati: {dispositivo['dati']}"
+    dispositivi_normalizzati = normalizza_vulnerabilita(dispositivi)
+    for dispositivo in dispositivi_normalizzati:
+        corpo_notifica = (f"IP: {dispositivo['ip']}\n"
+                          f"Porta: {dispositivo['port']}\n"
+                          f"CVE: {dispositivo['CVE']}\n"
+                          f"Verified: {dispositivo['verified']}\n"
+                          f"Ranking EPSS: {dispositivo['ranking_epss']}\n"
+                          f"CVSS v2: {dispositivo['cvss_v2']}\n"
+                          f"Summary: {dispositivo['summary']}\n"
+                          f"References: {dispositivo['references']}\n"
+                          f"EPSS: {dispositivo['epss']}\n"
+                          f"CVSS: {dispositivo['cvss']}")
         invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
-        collegamento_db(dispositivo)
+    collegamento_db(dispositivi_normalizzati)
 
 # Esegui il monitoraggio per una query specifica
 query = 'country:"IT" city:"Castelnuovo della Daunia"'
