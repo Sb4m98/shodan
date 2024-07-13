@@ -46,17 +46,30 @@ def invia_notifica(oggetto, corpo):
     except smtplib.SMTPException as e:
         print(f"Errore nell'invio dell'email: {e}")
 
+# Funzione per verificare se il dispositivo esiste già nel database
+def dispositivo_esiste(container, dispositivo):
+    query = f'SELECT * FROM c WHERE c.ip="{dispositivo["ip"]}" AND c.port={dispositivo["port"]} AND c.CVE="{dispositivo["CVE"]}"'
+    items = list(container.query_items(query=query, enable_cross_partition_query=True))
+    return len(items) > 0
+
 # Funzione per salvare i dati nel database
-def collegamento_db(dispositivi_normalizzati):
-    client = cosmos_client.CosmosClient(DB_URI, {'masterKey' : PRIMARY_KEY_DB})
+def collegamento_db(dispositivo):
+    client = cosmos_client.CosmosClient(DB_URI, {'masterKey': PRIMARY_KEY_DB})
     try:
         database = client.get_database_client(DB_NAME)
         container = database.get_container_client(COLLECTION_NAME)
-        print(f"Connessione creata col in DB")
-        for dispositivo in dispositivi_normalizzati:
+        print(f"Connessione creata col DB")
+        
+        if not dispositivo_esiste(container, dispositivo):
             salva_dispositivo(container, dispositivo)
+            return True
+        else:
+            print(f"Dispositivo già esistente nel DB: {dispositivo['ip']}:{dispositivo['port']} CVE: {dispositivo['CVE']}")
+            return False
+
     except Exception as e:
         print(f"Errore nel tentativo di connessione: {e}")
+        return False
 
 def salva_dispositivo(container, dispositivo):
     try:
@@ -100,18 +113,18 @@ def monitoraggio(query):
     dispositivi = ricerca_dispositivi_vulnerabili(query)
     dispositivi_normalizzati = normalizza_vulnerabilita(dispositivi)
     for dispositivo in dispositivi_normalizzati:
-        corpo_notifica = (f"IP: {dispositivo['ip']}\n"
-                          f"Porta: {dispositivo['port']}\n"
-                          f"CVE: {dispositivo['CVE']}\n"
-                          f"Verified: {dispositivo['verified']}\n"
-                          f"Ranking EPSS: {dispositivo['ranking_epss']}\n"
-                          f"CVSS v2: {dispositivo['cvss_v2']}\n"
-                          f"Summary: {dispositivo['summary']}\n"
-                          f"References: {dispositivo['references']}\n"
-                          f"EPSS: {dispositivo['epss']}\n"
-                          f"CVSS: {dispositivo['cvss']}")
-        invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
-    collegamento_db(dispositivi_normalizzati)
+        if collegamento_db(dispositivo):
+            corpo_notifica = (f"IP: {dispositivo['ip']}\n"
+                              f"Porta: {dispositivo['port']}\n"
+                              f"CVE: {dispositivo['CVE']}\n"
+                              f"Verified: {dispositivo['verified']}\n"
+                              f"Ranking EPSS: {dispositivo['ranking_epss']}\n"
+                              f"CVSS v2: {dispositivo['cvss_v2']}\n"
+                              f"Summary: {dispositivo['summary']}\n"
+                              f"References: {dispositivo['references']}\n"
+                              f"EPSS: {dispositivo['epss']}\n"
+                              f"CVSS: {dispositivo['cvss']}")
+            invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
 
 # Esegui il monitoraggio per una query specifica
 query = 'country:"IT" city:"Castelnuovo della Daunia"'
