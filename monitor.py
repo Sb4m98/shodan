@@ -92,12 +92,16 @@ def normalizza_vulnerabilita(dispositivi):
     for dispositivo in dispositivi:
         ip = dispositivo['ip_str']
         port = dispositivo['port']
+        longitude = dispositivo['location']['longitude'] if 'location' in dispositivo and 'longitude' in dispositivo['location'] else None
+        latitude = dispositivo['location']['latitude'] if 'location' in dispositivo and 'latitude' in dispositivo['location'] else None
         if 'vulns' in dispositivo:
             for cve, details in dispositivo['vulns'].items():
                 dispositivi_normalizzati.append({
                     'id': str(uuid.uuid4()), #genera un id unico
                     'ip': ip,
                     'port': port,
+                    'longitude': longitude,
+                    'latitude': latitude,
                     'CVE': cve,
                     'verified': details.get('verified', False),
                     'ranking_epss': details.get('ranking_epss', 0),
@@ -116,6 +120,8 @@ def monitoraggio(query):
         if collegamento_db(dispositivo):
             corpo_notifica = (f"IP: {dispositivo['ip']}\n"
                               f"Porta: {dispositivo['port']}\n"
+                              f"Longitude: {dispositivo['longitude']}\n"
+                              f"Latitude: {dispositivo['latitude']}\n"
                               f"CVE: {dispositivo['CVE']}\n"
                               f"Verified: {dispositivo['verified']}\n"
                               f"Ranking EPSS: {dispositivo['ranking_epss']}\n"
