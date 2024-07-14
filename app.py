@@ -10,8 +10,11 @@ def home():
 @app.route('/monitoraggio', methods=['GET'])
 def monitoraggio_endpoint():
     query = request.args.get('query', 'country:"IT" city:"Castelnuovo della Daunia"')
-    monitor.monitoraggio(query)
-    return jsonify({"message": "Monitoraggio eseguito", "query": query})
+    try:
+        monitor.monitoraggio(query)
+        return jsonify({"message": "Monitoraggio eseguito", "query": query})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
