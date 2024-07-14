@@ -2,3 +2,5 @@ shodan
 azure-identity
 azure-keyvault-secrets
 azure-cosmos
+Flask
+
