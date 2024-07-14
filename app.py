@@ -1,11 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, render_template_string
 import monitor
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Benvenuto nel servizio di monitoraggio delle vulnerabilità!"
+    return render_template_string(open('templates/your_template.html').read())
 
 @app.route('/monitoraggio', methods=['GET'])
 def monitoraggio_endpoint():
