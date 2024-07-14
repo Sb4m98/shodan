@@ -64,7 +64,13 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2D026C2492CF49ABB84B5F0C9AE981BB }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BDB840C7CD094130AD5C11889741C425 }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Clean up old deployment
+        run: az webapp delete --name ShodanWebApp --resource-group YourResourceGroupName
+
+      - name: Create the webapp again
+        run: az webapp create --name ShodanWebApp --resource-group YourResourceGroupName --plan YourPlanName
+
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
