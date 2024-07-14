@@ -10,6 +10,7 @@ def home():
 @app.route('/monitoraggio', methods=['GET'])
 def monitoraggio_endpoint():
     query = request.args.get('query', 'country:"IT" city:"Castelnuovo della Daunia"')
+    print(f"Running query: {query}") 
     try:
         monitor.monitoraggio(query)
         return jsonify({"message": "Monitoraggio eseguito", "query": query})
