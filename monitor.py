@@ -3,6 +3,7 @@ import shodan
 import smtplib
 import azure.cosmos.cosmos_client as cosmos_client
 import uuid
+import urllib.parse
 from email.mime.text import MIMEText
 
 # Recupera i segreti dalle variabili d'ambiente
@@ -102,6 +103,7 @@ def normalizza_vulnerabilita(dispositivi):
     return dispositivi_normalizzati
 
 def monitoraggio(query):
+    query = urllib.parse.unquote(query)
     dispositivi = ricerca_dispositivi_vulnerabili(query)
     dispositivi_normalizzati = normalizza_vulnerabilita(dispositivi)
     for dispositivo in dispositivi_normalizzati:
