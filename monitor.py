@@ -1,6 +1,4 @@
 import os
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
 import shodan
 import smtplib
 import azure.cosmos.cosmos_client as cosmos_client
@@ -9,25 +7,15 @@ from email.mime.text import MIMEText
 
 # Recupera i segreti dalle variabili d'ambiente
 API_KEY = os.getenv('SHODAN_API_KEY')
-print(API_KEY)
 SMTP_PORT = int(os.getenv('SMTP_PORT_SECRET'))
-print(SMTP_PORT)
 SMTP_USER = os.getenv('SMTP_USER_SECRET')
-print(SMTP_USER)
 SMTP_PASS = os.getenv('SMTP_PASS_SECRET')
-print(SMTP_PASS)
 TO_EMAIL = os.getenv('TO_EMAIL_SECRET')
-print(TO_EMAIL)
 SMTP_SERVER = os.getenv('SMTP_SERVER_SECRET')
-print(SMTP_SERVER)
 DB_URI = os.getenv('DB_URI')
-print(DB_URI)
 DB_NAME = os.getenv('DB_NAME')
-print(DB_NAME)
 COLLECTION_NAME = os.getenv('COLLECTION_NAME')
-print(COLLECTION_NAME)
 PRIMARY_KEY_DB = os.getenv('PRIMARY_KEY_DB')
-print(PRIMARY_KEY_DB)
 
 api = shodan.Shodan(API_KEY)
 
@@ -132,6 +120,7 @@ def monitoraggio(query):
                               f"CVSS: {dispositivo['cvss']}")
             invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
 
-# Esegui il monitoraggio per una query specifica
-query = 'country:"IT" city:"Castelnuovo della Daunia"'
-monitoraggio(query)
+if __name__ == "__main__":
+    # Esegui il monitoraggio per una query specifica solo se il file è eseguito direttamente
+    query = 'country:"IT" city:"Castelnuovo della Daunia"'
+    monitoraggio(query)
