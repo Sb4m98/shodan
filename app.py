@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return render_template_string(open('templates/your_template.html').read())
+    return render_template_string(open('templates/template.html').read())
 
 @app.route('/monitoraggio', methods=['GET'])
 def monitoraggio_endpoint():
