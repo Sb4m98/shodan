@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servizio di Monitoraggio</title>
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 200px;">
+        <h1>Benvenuto nel servizio di monitoraggio delle vulnerabilità!</h1>
+    </header>
+    
+    <form action="/monitoraggio" method="get">
+        <input type="text" name="query" placeholder="Inserisci la tua query">
+        <button type="submit">Esegui Monitoraggio</button>
+    </form>
+</body>
+</html>
