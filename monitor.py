@@ -92,13 +92,12 @@ def normalizza_vulnerabilita(dispositivi):
                     'longitude': longitude,
                     'latitude': latitude,
                     'CVE': cve,
-                    'verified': details.get('verified', False),
                     'ranking_epss': details.get('ranking_epss', 0),
-                    'cvss_v2': details.get('cvss_v2', 0),
                     'summary': details.get('summary', ''),
-                    'references': ', '.join(details.get('references', [])),
+                    'propose_action' : details.get('propose_action', ''),
                     'epss': details.get('epss', 0),
-                    'cvss': details.get('cvss', 0)
+                    'cvss': details.get('cvss', 0),
+                    'references': ', '.join(details.get('references', []))
                 })
     return dispositivi_normalizzati
 
@@ -113,10 +112,9 @@ def monitoraggio(query):
                               f"Longitude: {dispositivo['longitude']}\n"
                               f"Latitude: {dispositivo['latitude']}\n"
                               f"CVE: {dispositivo['CVE']}\n"
-                              f"Verified: {dispositivo['verified']}\n"
                               f"Ranking EPSS: {dispositivo['ranking_epss']}\n"
-                              f"CVSS v2: {dispositivo['cvss_v2']}\n"
                               f"Summary: {dispositivo['summary']}\n"
+                              f"propose_action: {dispositivo['propose_action']}\n"
                               f"References: {dispositivo['references']}\n"
                               f"EPSS: {dispositivo['epss']}\n"
                               f"CVSS: {dispositivo['cvss']}")
