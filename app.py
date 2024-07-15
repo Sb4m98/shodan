@@ -13,7 +13,8 @@ def monitoraggio_endpoint():
     print(f"Running query: {query}") 
     try:
         monitor.monitoraggio(query)
-        return jsonify({"message": "Monitoraggio eseguito", "query": query})
+        return redirect("https://app.powerbi.com/reportEmbed?reportId=8e5f6b6b-d2b3-4d78-9cd1-e26275961b21&autoAuth=true&ctid=e99647dc-1b08-454a-bf8c-699181b389ab")
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
