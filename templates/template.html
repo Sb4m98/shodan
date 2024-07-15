@@ -4,16 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Servizio di Monitoraggio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #006F8B;
+            color: #fff;
+            padding: 20px 0;
+            margin-bottom: 40px; /* Adjust this value to add more space between the header and the form */
+        }
+        header img {
+            width: 200px;
+        }
+        header h1 {
+            margin: 10px 0;
+            font-size: 2em;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            max-width: 500px;
+            width: 90%;
+            margin-bottom: 20px; /* Add space between the form and the links */
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 2px solid #006F8B;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        button {
+            background-color: #006F8B;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #005f7a;
+        }
+        .info-links {
+            margin-bottom: 20px;
+        }
+        .info-links a {
+            color: #006F8B;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .info-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width: 200px;">
-        <h1>Benvenuto nel servizio di monitoraggio delle vulnerabilità!</h1>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+        <h1>Cyber ​​Threat Scanning and Analysis Service</h1>
     </header>
     
     <form action="/monitoraggio" method="get">
-        <input type="text" name="query" placeholder="Inserisci la tua query">
-        <button type="submit">Esegui Monitoraggio</button>
+        <input type="text" name="query" placeholder="Insert query">
+        <button type="submit">Start Scanning</button>
     </form>
+
+    <div class="info-links">
+        <p><a href="https://beta.shodan.io/search/filters" target="_blank">Query construction guide</a></p>
+        <p><a href="https://beta.shodan.io/search/examples" target="_blank">Query examples</a></p>
+    </div>
 </body>
 </html>
