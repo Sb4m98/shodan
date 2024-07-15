@@ -70,7 +70,7 @@ def salva_dispositivo(container, dispositivo):
 def ricerca_dispositivi_vulnerabili(query):
     try:
         results = api.search(query)
-        print(f"Risultati trovati: {results['total']}")
+        print(f"Risultati trovati da analizzare: {results['total']}")
         return results['matches']
     except shodan.APIError as e:
         print(f"Errore durante la ricerca su Shodan: {e}")
@@ -94,7 +94,8 @@ def normalizza_vulnerabilita(dispositivi):
                     'CVE': cve,
                     'ranking_epss': details.get('ranking_epss', 0),
                     'summary': details.get('summary', ''),
-                    'propose_action' : details.get('propose_action', ''),
+                    'device' : details.get('device', ''),
+                    'product' : details.get('product', ''),
                     'epss': details.get('epss', 0),
                     'cvss': details.get('cvss', 0),
                     'references': ', '.join(details.get('references', []))
@@ -105,20 +106,31 @@ def monitoraggio(query):
     query = urllib.parse.unquote(query)
     dispositivi = ricerca_dispositivi_vulnerabili(query)
     dispositivi_normalizzati = normalizza_vulnerabilita(dispositivi)
+    
+    dispositivi_inviati = []
     for dispositivo in dispositivi_normalizzati:
         if collegamento_db(dispositivo):
-            corpo_notifica = (f"IP: {dispositivo['ip']}\n"
-                              f"Porta: {dispositivo['port']}\n"
-                              f"Longitude: {dispositivo['longitude']}\n"
-                              f"Latitude: {dispositivo['latitude']}\n"
-                              f"CVE: {dispositivo['CVE']}\n"
-                              f"Ranking EPSS: {dispositivo['ranking_epss']}\n"
-                              f"Summary: {dispositivo['summary']}\n"
-                              f"propose_action: {dispositivo['propose_action']}\n"
-                              f"References: {dispositivo['references']}\n"
-                              f"EPSS: {dispositivo['epss']}\n"
-                              f"CVSS: {dispositivo['cvss']}")
-            invia_notifica("Allerta Shodan: Dispositivo Vulnerabile Trovato", corpo_notifica)
+            dispositivi_inviati.append(dispositivo)
+    
+    if dispositivi_inviati:
+        corpo_notifica = "Dispositivi vulnerabili trovati:\n\n"
+        for dispositivo in dispositivi_inviati:
+            corpo_notifica += (f"IP: {dispositivo['ip']}\n"
+                               f"Porta: {dispositivo['port']}\n"
+                               f"CVE: {dispositivo['CVE']}\n"
+                               f"Device: {dispositivo['device']}\n"
+                               f"Product: {dispositivo['product']}\n"
+                               f"Longitude: {dispositivo['longitude']}\n"
+                               f"Latitude: {dispositivo['latitude']}\n"
+                               f"Ranking EPSS: {dispositivo['ranking_epss']}\n"
+                               f"Summary: {dispositivo['summary']}\n"
+                               f"References: {dispositivo['references']}\n"
+                               f"EPSS: {dispositivo['epss']}\n"
+                               f"CVSS: {dispositivo['cvss']}\n"
+                               "-----------------------------\n")
+        
+        invia_notifica("Allerta Shodan: Dispositivi Vulnerabili Trovati", corpo_notifica)
+        print(f"Totale dispositivi vulnerabili trovati: {len(dispositivi_inviati)}")
 
 if __name__ == "__main__":
     # Esegui il monitoraggio per una query specifica solo se il file è eseguito direttamente
