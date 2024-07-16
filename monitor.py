@@ -5,6 +5,7 @@ import azure.cosmos.cosmos_client as cosmos_client
 import uuid
 import urllib.parse
 from email.mime.text import MIMEText
+from concurrent.futures import ThreadPoolExecutor
 
 # Recupera i segreti dalle variabili d'ambiente
 API_KEY = os.getenv('SHODAN_API_KEY')
@@ -35,37 +36,33 @@ def invia_notifica(oggetto, corpo):
     except smtplib.SMTPException as e:
         print(f"Errore nell'invio dell'email: {e}")
 
-# Funzione per verificare se il dispositivo esiste già nel database
 def dispositivo_esiste(container, dispositivo):
     query = f'SELECT * FROM c WHERE c.ip="{dispositivo["ip"]}" AND c.port={dispositivo["port"]} AND c.CVE="{dispositivo["CVE"]}"'
     items = list(container.query_items(query=query, enable_cross_partition_query=True))
     return len(items) > 0
 
-# Funzione per salvare i dati nel database
-def collegamento_db(dispositivo):
+def collegamento_db(dispositivi):
     client = cosmos_client.CosmosClient(DB_URI, {'masterKey': PRIMARY_KEY_DB})
     try:
         database = client.get_database_client(DB_NAME)
         container = database.get_container_client(COLLECTION_NAME)
         print(f"Connessione creata col DB")
-        
-        if not dispositivo_esiste(container, dispositivo):
-            salva_dispositivo(container, dispositivo)
-            return True
-        else:
-            print(f"Dispositivo già esistente nel DB: {dispositivo['ip']}:{dispositivo['port']} CVE: {dispositivo['CVE']}")
-            return False
+
+        dispositivi_da_salvare = [dispositivo for dispositivo in dispositivi if not dispositivo_esiste(container, dispositivo)]
+        salva_dispositivi(container, dispositivi_da_salvare)
+        return dispositivi_da_salvare
 
     except Exception as e:
         print(f"Errore nel tentativo di connessione: {e}")
-        return False
+        return []
 
-def salva_dispositivo(container, dispositivo):
+def salva_dispositivi(container, dispositivi):
     try:
-        container.create_item(body=dispositivo)
-        print(f"Dispositivo salvato correttamente: {dispositivo}")
+        for dispositivo in dispositivi:
+            container.create_item(body=dispositivo)
+        print(f"Dispositivi salvati correttamente.")
     except Exception as e:
-        print(f"Errore nel salvataggio del dispositivo: {e}")
+        print(f"Errore nel salvataggio dei dispositivi: {e}")
 
 def ricerca_dispositivi_vulnerabili(query):
     try:
@@ -94,24 +91,15 @@ def normalizza_vulnerabilita(dispositivi):
                     'CVE': cve,
                     'ranking_epss': details.get('ranking_epss', 0),
                     'summary': details.get('summary', ''),
-                    'device' : details.get('device', ''),
-                    'product' : details.get('product', ''),
+                    'device': details.get('device', ''),
+                    'product': details.get('product', ''),
                     'epss': details.get('epss', 0),
                     'cvss': details.get('cvss', 0),
                     'references': ', '.join(details.get('references', []))
                 })
     return dispositivi_normalizzati
 
-def monitoraggio(query):
-    query = urllib.parse.unquote(query)
-    dispositivi = ricerca_dispositivi_vulnerabili(query)
-    dispositivi_normalizzati = normalizza_vulnerabilita(dispositivi)
-    
-    dispositivi_inviati = []
-    for dispositivo in dispositivi_normalizzati:
-        if collegamento_db(dispositivo):
-            dispositivi_inviati.append(dispositivo)
-    
+def invia_notifiche_in_batch(dispositivi_inviati):
     if dispositivi_inviati:
         corpo_notifica = "Dispositivi vulnerabili trovati:\n\n"
         for dispositivo in dispositivi_inviati:
@@ -132,7 +120,14 @@ def monitoraggio(query):
         invia_notifica("Allerta Shodan: Dispositivi Vulnerabili Trovati", corpo_notifica)
         print(f"Totale dispositivi vulnerabili trovati: {len(dispositivi_inviati)}")
 
+def monitoraggio(query):
+    query = urllib.parse.unquote(query)
+    dispositivi = ricerca_dispositivi_vulnerabili(query)
+    dispositivi_normalizzati = normalizza_vulnerabilita(dispositivi)
+    
+    dispositivi_inviati = collegamento_db(dispositivi_normalizzati)
+    invia_notifiche_in_batch(dispositivi_inviati)
+
 if __name__ == "__main__":
-    # Esegui il monitoraggio per una query specifica solo se il file è eseguito direttamente
     query = 'country:"IT" city:"Castelnuovo della Daunia"'
     monitoraggio(query)
