@@ -6,10 +6,6 @@ import uuid
 import urllib.parse
 from email.mime.text import MIMEText
 from concurrent.futures import ThreadPoolExecutor
-import logging
-
-# Configura il logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Recupera i segreti dalle variabili d'ambiente
 API_KEY = os.getenv('SHODAN_API_KEY')
@@ -36,9 +32,9 @@ def invia_notifica(oggetto, corpo):
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.sendmail(msg['From'], [msg['To']], msg.as_string())
-        logging.info("Email inviata con successo.")
+        print("Email inviata con successo.")
     except smtplib.SMTPException as e:
-        logging.error(f"Errore nell'invio dell'email: {e}")
+        print(f"Errore nell'invio dell'email: {e}")
 
 def dispositivo_esiste(container, dispositivo):
     query = f'SELECT * FROM c WHERE c.ip="{dispositivo["ip"]}" AND c.port={dispositivo["port"]} AND c.CVE="{dispositivo["CVE"]}"'
@@ -50,50 +46,31 @@ def collegamento_db(dispositivi):
     try:
         database = client.get_database_client(DB_NAME)
         container = database.get_container_client(COLLECTION_NAME)
-        logging.info("Connessione creata col DB")
+        print(f"Connessione creata col DB")
 
-        dispositivi_da_salvare = verifica_dispositivi(container, dispositivi)
+        dispositivi_da_salvare = [dispositivo for dispositivo in dispositivi if not dispositivo_esiste(container, dispositivo)]
         salva_dispositivi(container, dispositivi_da_salvare)
         return dispositivi_da_salvare
 
     except Exception as e:
-        logging.error(f"Errore nel tentativo di connessione: {e}")
+        print(f"Errore nel tentativo di connessione: {e}")
         return []
-
-def verifica_dispositivi(container, dispositivi):
-    futures = []
-    results = []
-
-    with ThreadPoolExecutor() as executor:
-        for dispositivo in dispositivi:
-            futures.append(executor.submit(dispositivo_esiste, container, dispositivo))
-    
-    for future in futures:
-        results.append(future.result())
-    
-    # Filtra i dispositivi già esistenti
-    return [dispositivo for dispositivo, esistente in zip(dispositivi, results) if not esistente]
 
 def salva_dispositivi(container, dispositivi):
     try:
-        batch_items = []
         for dispositivo in dispositivi:
-            batch_items.append({'operationType': 'Upsert', 'body': dispositivo})
-        
-        for item in batch_items:
-            container.upsert_item(body=item['body'])
-        
-        logging.info("Dispositivi salvati correttamente.")
+            container.create_item(body=dispositivo)
+        print(f"Dispositivi salvati correttamente.")
     except Exception as e:
-        logging.error(f"Errore nel salvataggio dei dispositivi: {e}")
+        print(f"Errore nel salvataggio dei dispositivi: {e}")
 
 def ricerca_dispositivi_vulnerabili(query):
     try:
         results = api.search(query)
-        logging.info(f"Risultati trovati da analizzare: {results['total']}")
+        print(f"Risultati trovati da analizzare: {results['total']}")
         return results['matches']
     except shodan.APIError as e:
-        logging.error(f"Errore durante la ricerca su Shodan: {e}")
+        print(f"Errore durante la ricerca su Shodan: {e}")
         return []
 
 def normalizza_vulnerabilita(dispositivi):
@@ -106,7 +83,7 @@ def normalizza_vulnerabilita(dispositivi):
         if 'vulns' in dispositivo:
             for cve, details in dispositivo['vulns'].items():
                 dispositivi_normalizzati.append({
-                    'id': str(uuid.uuid4()),
+                    'id': str(uuid.uuid4()), #genera un id unico
                     'ip': ip,
                     'port': port,
                     'longitude': longitude,
@@ -141,7 +118,7 @@ def invia_notifiche_in_batch(dispositivi_inviati):
                                "-----------------------------\n")
         
         invia_notifica("Allerta Shodan: Dispositivi Vulnerabili Trovati", corpo_notifica)
-        logging.info(f"Totale dispositivi vulnerabili trovati: {len(dispositivi_inviati)}")
+        print(f"Totale dispositivi vulnerabili trovati: {len(dispositivi_inviati)}")
 
 def monitoraggio(query):
     query = urllib.parse.unquote(query)
