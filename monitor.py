@@ -6,6 +6,10 @@ import uuid
 import urllib.parse
 from email.mime.text import MIMEText
 from concurrent.futures import ThreadPoolExecutor
+import logging
+
+# Configura il logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Recupera i segreti dalle variabili d'ambiente
 API_KEY = os.getenv('SHODAN_API_KEY')
@@ -32,9 +36,9 @@ def invia_notifica(oggetto, corpo):
             server.starttls()
             server.login(SMTP_USER, SMTP_PASS)
             server.sendmail(msg['From'], [msg['To']], msg.as_string())
-        print("Email inviata con successo.")
+        logging.info("Email inviata con successo.")
     except smtplib.SMTPException as e:
-        print(f"Errore nell'invio dell'email: {e}")
+        logging.error(f"Errore nell'invio dell'email: {e}")
 
 def dispositivo_esiste(container, dispositivo):
     query = f'SELECT * FROM c WHERE c.ip="{dispositivo["ip"]}" AND c.port={dispositivo["port"]} AND c.CVE="{dispositivo["CVE"]}"'
@@ -46,14 +50,14 @@ def collegamento_db(dispositivi):
     try:
         database = client.get_database_client(DB_NAME)
         container = database.get_container_client(COLLECTION_NAME)
-        print("Connessione creata col DB")
+        logging.info("Connessione creata col DB")
 
         dispositivi_da_salvare = verifica_dispositivi(container, dispositivi)
         salva_dispositivi(container, dispositivi_da_salvare)
         return dispositivi_da_salvare
 
     except Exception as e:
-        print(f"Errore nel tentativo di connessione: {e}")
+        logging.error(f"Errore nel tentativo di connessione: {e}")
         return []
 
 def verifica_dispositivi(container, dispositivi):
@@ -79,17 +83,17 @@ def salva_dispositivi(container, dispositivi):
         for item in batch_items:
             container.upsert_item(body=item['body'])
         
-        print("Dispositivi salvati correttamente.")
+        logging.info("Dispositivi salvati correttamente.")
     except Exception as e:
-        print(f"Errore nel salvataggio dei dispositivi: {e}")
+        logging.error(f"Errore nel salvataggio dei dispositivi: {e}")
 
 def ricerca_dispositivi_vulnerabili(query):
     try:
         results = api.search(query)
-        print(f"Risultati trovati da analizzare: {results['total']}")
+        logging.info(f"Risultati trovati da analizzare: {results['total']}")
         return results['matches']
     except shodan.APIError as e:
-        print(f"Errore durante la ricerca su Shodan: {e}")
+        logging.error(f"Errore durante la ricerca su Shodan: {e}")
         return []
 
 def normalizza_vulnerabilita(dispositivi):
@@ -137,7 +141,7 @@ def invia_notifiche_in_batch(dispositivi_inviati):
                                "-----------------------------\n")
         
         invia_notifica("Allerta Shodan: Dispositivi Vulnerabili Trovati", corpo_notifica)
-        print(f"Totale dispositivi vulnerabili trovati: {len(dispositivi_inviati)}")
+        logging.info(f"Totale dispositivi vulnerabili trovati: {len(dispositivi_inviati)}")
 
 def monitoraggio(query):
     query = urllib.parse.unquote(query)
