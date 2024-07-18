@@ -75,11 +75,13 @@ def verifica_dispositivi(container, dispositivi):
 
 def salva_dispositivi(container, dispositivi):
     try:
-        for dispositivo in dispositivi:
-            container.upsert_item(body=dispositivo)
-        print("Dispositivi salvati correttamente.")
+        if dispositivi:  # Verifica se la lista dispositivi non è vuota
+            for dispositivo in dispositivi:
+                container.upsert_item(body=dispositivo)
+            print("Dispositivi salvati correttamente.")
     except Exception as e:
         print(f"Errore nel salvataggio dei dispositivi: {e}")
+
 
 def ricerca_dispositivi_vulnerabili(query):
     try:
