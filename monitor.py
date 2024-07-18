@@ -120,7 +120,8 @@ def normalizza_vulnerabilita(dispositivi):
 
 def invia_notifiche_in_batch(dispositivi_inviati):
     if dispositivi_inviati:
-        corpo_notifica = "Dispositivi vulnerabili trovati:\n\n"
+        total_dispositivi = len(dispositivi_inviati)
+        corpo_notifica = f"Totale dispositivi vulnerabili trovati: {total_dispositivi}\n\n"
         for dispositivo in dispositivi_inviati:
             corpo_notifica += (f"IP: {dispositivo['ip']}\n"
                                f"Porta: {dispositivo['port']}\n"
