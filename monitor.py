@@ -5,7 +5,6 @@ import azure.cosmos.cosmos_client as cosmos_client
 import uuid
 import urllib.parse
 from email.mime.text import MIMEText
-from concurrent.futures import ThreadPoolExecutor
 
 # Recupera i segreti dalle variabili d'ambiente
 API_KEY = os.getenv('SHODAN_API_KEY')
